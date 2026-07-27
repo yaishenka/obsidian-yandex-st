@@ -1,0 +1,37 @@
+{
+  "name": "yandex-tracker-st",
+  "version": "0.1.0",
+  "description": "Render Yandex Tracker issues and queries in Obsidian notes.",
+  "main": "main.js",
+  "files": [
+    "main.js",
+    "manifest.json",
+    "styles.css",
+    "README.md",
+    "versions.json"
+  ],
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "test": "cross-env-shell TZ=UTC jest --passWithNoTests",
+    "pack:dry": "npm_config_cache=/private/tmp/yandex-tracker-st-npm-cache npm pack --dry-run",
+    "test-watch": "cross-env-shell TZ=UTC \"jest --watchAll\""
+  },
+  "keywords": ["obsidian", "yandex", "tracker", "st"],
+  "author": "yaishenka",
+  "license": "MIT",
+  "devDependencies": {
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.2",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.14.0",
+    "builtin-modules": "^3.3.0",
+    "cross-env": "^7.0.3",
+    "esbuild": "^0.24.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "obsidian": "latest",
+    "ts-jest": "^29.4.1",
+    "typescript": "^5.6.2"
+  }
+}
