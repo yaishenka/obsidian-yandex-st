@@ -84,7 +84,7 @@ export class STSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Yandex Tracker ST" });
+    containerEl.createEl("h2", { text: "Unofficial Yandex Tracker ST" });
 
     this.text("API URL", "Tracker API base URL. Configure it from your Tracker API access settings.", SettingsData.apiUrl, (value) => {
       SettingsData.apiUrl = value.trim();

@@ -1,6 +1,8 @@
-# Obsidian plugin for [Yandex Tracker](https://tracker.yandex.ru)
+# Unofficial Yandex Tracker ST for Obsidian
 
-Render Yandex Tracker issues and queries directly in Obsidian notes.
+Render [Yandex Tracker](https://tracker.yandex.ru) issues and queries directly in Obsidian notes.
+
+This is an unofficial community plugin. It is not affiliated with, endorsed by, maintained by, or supported by Yandex.
 
 Public Tracker API access documentation: <https://yandex.ru/support/tracker/ru/api-ref/access>.
 

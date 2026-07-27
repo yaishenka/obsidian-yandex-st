@@ -1,9 +1,9 @@
 {
   "id": "yandex-tracker-st",
-  "name": "Yandex Tracker ST",
-  "version": "0.1.0",
+  "name": "Unofficial Yandex Tracker ST",
+  "version": "0.1.1",
   "minAppVersion": "1.5.0",
-  "description": "Render Yandex Tracker issues and queries in Obsidian notes.",
+  "description": "Unofficial plugin for rendering Yandex Tracker issues and queries in Obsidian notes. Not affiliated with or supported by Yandex.",
   "author": "yaishenka",
   "isDesktopOnly": false
 }
