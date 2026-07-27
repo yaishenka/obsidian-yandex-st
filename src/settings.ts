@@ -67,11 +67,13 @@ function cloneSearchColumns(columns: STPluginSettings["searchColumns"]): STPlugi
 }
 
 async function resolveDesktopTokenFile(filePath: string): Promise<string | undefined> {
-  if (!Platform.isDesktopApp) {
+  const desktopRequire = Platform.isDesktop ? window.require : undefined;
+  if (!desktopRequire) {
     return undefined;
   }
   try {
-    const [{ readFileSync }, { homedir }] = await Promise.all([import("fs"), import("os")]);
+    const { readFileSync } = desktopRequire("fs") as { readFileSync: (path: string, encoding: "utf8") => string };
+    const { homedir } = desktopRequire("os") as { homedir: () => string };
     const expandedPath = filePath === "~" || filePath.startsWith("~/") ? `${homedir()}${filePath.slice(1)}` : filePath;
     return resolveTokenFromText(readFileSync(expandedPath, "utf8"));
   } catch {
@@ -91,7 +93,7 @@ export class STSettingTab extends PluginSettingTab {
     return [
       {
         type: "group",
-        heading: "Unofficial Yandex Tracker ST",
+        heading: "Connection",
         items: [
           {
             name: "API URL",
@@ -201,7 +203,7 @@ export class STSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    new Setting(containerEl).setName("Unofficial Yandex Tracker ST").setHeading();
+    new Setting(containerEl).setName("Connection").setHeading();
 
     this.text("API URL", "Tracker API base URL. Configure it from your Tracker API access settings.", SettingsData.apiUrl, (value) => {
       SettingsData.apiUrl = value.trim();
