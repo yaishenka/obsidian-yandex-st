@@ -28,7 +28,7 @@ export class SearchView {
     }
 
     const query = values.get("query") ?? queryLines.join("\n").trim();
-    const type = ((values.get("type") ?? "TABLE").toUpperCase() === "TABLE" ? "TABLE" : "TABLE") as SearchRenderingType;
+    const type: SearchRenderingType = "TABLE";
     const parsedLimit = values.has("limit") ? Number(values.get("limit")) : undefined;
     const limit = parsedLimit && Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : undefined;
     const columns = parseColumns(values.get("columns"));

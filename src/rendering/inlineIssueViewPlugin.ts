@@ -126,11 +126,7 @@ function isInsideTrackerUrl(view: EditorView, pos: number, pattern: RegExp): boo
 }
 
 function isLivePreview(view: EditorView): boolean {
-  try {
-    return view.state.field(editorLivePreviewField as any);
-  } catch {
-    return true;
-  }
+  return view.state.field(editorLivePreviewField, false) ?? true;
 }
 
 function cursorTouchesTag(view: EditorView, start: number, length: number): boolean {

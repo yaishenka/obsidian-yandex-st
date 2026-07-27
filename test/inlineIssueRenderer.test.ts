@@ -14,6 +14,11 @@ function installDomHelpers(): void {
 
   (globalThis as any).createSpan = (options?: any) => create("span", options);
   (globalThis as any).createEl = create;
+  (globalThis as any).createFragment = (): DocumentFragment => {
+    const fragment = document.createDocumentFragment() as DocumentFragment & { appendText: (text: string) => void };
+    fragment.appendText = (text: string) => fragment.append(document.createTextNode(text));
+    return fragment;
+  };
 }
 
 beforeAll(installDomHelpers);

@@ -1,6 +1,8 @@
-import { App, Platform, Plugin, PluginSettingTab, Setting } from "obsidian";
+import { App, Platform, Plugin, PluginSettingTab, Setting, type SettingDefinitionItem } from "obsidian";
 import { SEARCH_COLUMN_LABELS, STLanguage, STPluginSettings } from "./interfaces/settingsInterfaces";
 import { parseColumns } from "./searchView";
+
+type STSettingKey = keyof STPluginSettings;
 
 export const DEFAULT_SETTINGS: STPluginSettings = {
   apiUrl: "",
@@ -65,6 +67,9 @@ function cloneSearchColumns(columns: STPluginSettings["searchColumns"]): STPlugi
 }
 
 async function resolveDesktopTokenFile(filePath: string): Promise<string | undefined> {
+  if (!Platform.isDesktopApp) {
+    return undefined;
+  }
   try {
     const [{ readFileSync }, { homedir }] = await Promise.all([import("fs"), import("os")]);
     const expandedPath = filePath === "~" || filePath.startsWith("~/") ? `${homedir()}${filePath.slice(1)}` : filePath;
@@ -81,10 +86,122 @@ export class STSettingTab extends PluginSettingTab {
     super(app, plugin);
   }
 
+  getSettingDefinitions(): SettingDefinitionItem<STSettingKey>[] {
+    const availableColumns = Object.entries(SEARCH_COLUMN_LABELS).map(([type, label]) => `${type} (${label})`).join(", ");
+    return [
+      {
+        type: "group",
+        heading: "Unofficial Yandex Tracker ST",
+        items: [
+          {
+            name: "API URL",
+            desc: "Tracker API base URL. Configure it from your Tracker API access settings.",
+            control: { type: "text", key: "apiUrl" }
+          },
+          {
+            name: "Web URL",
+            desc: "Tracker web URL used for issue links.",
+            control: { type: "text", key: "webUrl" }
+          },
+          {
+            name: "OAuth token",
+            desc: "Stored in Obsidian plugin data. Leave empty to use token file.",
+            render: (setting) => this.configureTextSetting(setting, "OAuth token", "Stored in Obsidian plugin data. Leave empty to use token file.", SettingsData.token, (value) => {
+              SettingsData.token = value.trim();
+            }, true)
+          },
+          {
+            name: "Token file",
+            desc: "Used when OAuth token is empty. Desktop only.",
+            control: { type: "text", key: "tokenPath" }
+          },
+          {
+            name: "Language",
+            desc: "Localized Tracker fields.",
+            control: {
+              type: "dropdown",
+              key: "language",
+              options: { ru: "ru", en: "en" }
+            }
+          },
+          {
+            name: "Cache TTL",
+            desc: "Examples: 30s, 15m, 1h.",
+            control: { type: "text", key: "cacheTime" }
+          },
+          {
+            name: "Search result limit",
+            desc: "Default number of search rows.",
+            control: {
+              type: "number",
+              key: "searchResultsLimit",
+              min: 1,
+              defaultValue: DEFAULT_SETTINGS.searchResultsLimit
+            }
+          },
+          {
+            name: "Inline prefix",
+            desc: "Prefix for inline issue tags.",
+            control: { type: "text", key: "inlinePrefix" }
+          },
+          {
+            name: "Convert Tracker URLs",
+            desc: "Render Tracker issue URLs as inline issue tags.",
+            control: { type: "toggle", key: "inlineIssueUrlToTag" }
+          },
+          {
+            name: "Default search columns",
+            desc: `Comma-separated columns. Available: ${availableColumns}.`,
+            render: (setting) => this.configureSearchColumnsSetting(setting, availableColumns)
+          }
+        ]
+      }
+    ];
+  }
+
+  getControlValue(key: STSettingKey): unknown {
+    if (key === "searchColumns") {
+      return SettingsData.searchColumns.map((column) => column.type).join(", ");
+    }
+    return SettingsData[key];
+  }
+
+  async setControlValue(key: STSettingKey, value: unknown): Promise<void> {
+    switch (key) {
+      case "apiUrl":
+      case "webUrl":
+      case "token":
+      case "tokenPath":
+      case "cacheTime":
+        SettingsData[key] = String(value ?? "").trim();
+        break;
+      case "inlinePrefix":
+        SettingsData.inlinePrefix = String(value ?? "");
+        break;
+      case "language":
+        SettingsData.language = value === "en" ? "en" : "ru";
+        break;
+      case "searchResultsLimit": {
+        const parsed = Number(value);
+        SettingsData.searchResultsLimit = Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_SETTINGS.searchResultsLimit;
+        break;
+      }
+      case "inlineIssueUrlToTag":
+      case "logRequestsResponses":
+        SettingsData[key] = Boolean(value);
+        break;
+      case "searchColumns":
+        SettingsData.searchColumns = parseColumns(String(value ?? ""));
+        break;
+    }
+    await saveSettings(this.plugin);
+    this.onChange();
+  }
+
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Unofficial Yandex Tracker ST" });
+    new Setting(containerEl).setName("Unofficial Yandex Tracker ST").setHeading();
 
     this.text("API URL", "Tracker API base URL. Configure it from your Tracker API access settings.", SettingsData.apiUrl, (value) => {
       SettingsData.apiUrl = value.trim();
@@ -136,8 +253,11 @@ export class STSettingTab extends PluginSettingTab {
   }
 
   private searchColumns(availableColumns: string): void {
-    new Setting(this.containerEl)
-      .setName("Default search columns")
+    this.configureSearchColumnsSetting(new Setting(this.containerEl), availableColumns);
+  }
+
+  private configureSearchColumnsSetting(setting: Setting, availableColumns: string): void {
+    setting.setName("Default search columns")
       .setDesc(`Comma-separated columns. Available: ${availableColumns}.`)
       .addText((text) => text
         .setValue(SettingsData.searchColumns.map((column) => column.type).join(", "))
@@ -158,8 +278,11 @@ export class STSettingTab extends PluginSettingTab {
   }
 
   private text(name: string, desc: string, value: string, onChange: (value: string) => void, password = false): void {
-    new Setting(this.containerEl)
-      .setName(name)
+    this.configureTextSetting(new Setting(this.containerEl), name, desc, value, onChange, password);
+  }
+
+  private configureTextSetting(setting: Setting, name: string, desc: string, value: string, onChange: (value: string) => void, password = false): void {
+    setting.setName(name)
       .setDesc(desc)
       .addText((text) => {
         text.setValue(value).onChange(async (next: string) => {

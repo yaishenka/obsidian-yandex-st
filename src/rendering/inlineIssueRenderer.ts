@@ -28,20 +28,24 @@ function replaceTextNode(node: Text, client: Pick<TrackerClient, "getIssue">): v
     return;
   }
 
-  const fragment = document.createDocumentFragment();
+  const fragment = createFragment();
   let cursor = 0;
   matches.forEach((match) => {
-    fragment.append(document.createTextNode(text.slice(cursor, match.index)));
+    fragment.appendText(text.slice(cursor, match.index));
     const container = createSpan({ cls: "st-inline-issue" });
     container.appendChild(RC.renderLoadingItem(match.key, true));
     fragment.append(container);
     fillIssue(container, match.key, match.compact, client);
     cursor = match.index + match.raw.length;
   });
-  fragment.append(document.createTextNode(text.slice(cursor)));
+  fragment.appendText(text.slice(cursor));
   const parent = node.parentElement;
   const replacesWholeLink = matches.length === 1 && matches[0].raw === text && parent?.tagName === "A" && parent.textContent === text;
-  (replacesWholeLink ? parent! : node).replaceWith(fragment);
+  if (replacesWholeLink && parent) {
+    parent.replaceWith(fragment);
+  } else {
+    node.replaceWith(fragment);
+  }
 }
 
 function findInlineIssueMatches(text: string) {
