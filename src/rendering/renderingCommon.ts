@@ -2,12 +2,21 @@ import { Issue } from "../interfaces/trackerInterfaces";
 import { DEFAULT_SETTINGS, SettingsData } from "../settings";
 import { formatIssueTemplate } from "./issueFields";
 
-function issueUrl(issueKey: string): string {
-  return `${SettingsData.webUrl.replace(/\/$/, "")}/${issueKey}`;
+function issueUrl(issueKey: string): string | undefined {
+  const configuredUrl = SettingsData.webUrl.trim();
+  if (configuredUrl === "") {
+    return undefined;
+  }
+  return `${configuredUrl.replace(/\/$/, "")}/${issueKey}`;
 }
 
 function renderIssueKey(parent: HTMLElement, issueKey: string, className = "st-tag st-key"): void {
-  parent.appendChild(createExternalLink(issueKey, issueUrl(issueKey), className));
+  const href = issueUrl(issueKey);
+  if (href) {
+    parent.appendChild(createExternalLink(issueKey, href, className));
+  } else {
+    createSpan({ cls: className, text: issueKey, parent });
+  }
 }
 
 function createExternalLink(text: string, href: string, className: string): HTMLAnchorElement {
@@ -37,7 +46,11 @@ function renderRawIssueLink(issue: Issue): HTMLElement {
 }
 
 function renderRawIssueText(text: string, className = "st-inline-issue-raw", issueKey?: string): HTMLElement {
-  return createExternalLink(text, issueUrl(issueKey ?? text), `${className} external-link`);
+  const href = issueUrl(issueKey ?? text);
+  if (href) {
+    return createExternalLink(text, href, `${className} external-link`);
+  }
+  return createSpan({ cls: className, text });
 }
 
 export default {

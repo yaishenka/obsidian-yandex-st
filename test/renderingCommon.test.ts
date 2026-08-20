@@ -40,6 +40,22 @@ describe("renderingCommon", () => {
     expect(RC.issueUrl("YT-1")).toBe("https://tracker.yandex.ru/YT-1");
   });
 
+  it("renders plain text instead of links when the web URL is cleared", () => {
+    SettingsData.webUrl = "";
+    SettingsData.inlineIssueRawLink = true;
+    const issue = { key: "YT-1", summary: "Fix it", status: { id: "open", display: "Open" } };
+
+    const raw = RC.renderInlineIssue(issue);
+    const chip = RC.renderIssue(issue);
+
+    expect(RC.issueUrl("YT-1")).toBeUndefined();
+    expect(raw.tagName).toBe("SPAN");
+    expect(raw.className).toBe("st-inline-issue-raw");
+    expect(raw.textContent).toBe("YT-1 Fix it (Open)");
+    expect(chip.querySelector("a")).toBeNull();
+    expect(chip.textContent).toContain("YT-1");
+  });
+
   it("links issue chips to a custom web URL", () => {
     SettingsData.webUrl = "https://tracker.example.com";
     const el = RC.renderIssue({

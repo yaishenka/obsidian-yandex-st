@@ -157,6 +157,15 @@ describe("inline issue view plugin", () => {
     view.destroy();
   });
 
+  it("renders the widget without a link when the web URL is cleared", async () => {
+    SettingsData.webUrl = "";
+    SettingsData.inlineIssueRawLink = true;
+    const dom = await renderWidget(new InlineIssueWidget("YT-1", false, createClient() as any));
+
+    expect(dom.querySelector("a")).toBeNull();
+    expect(dom.textContent).toBe("YT-1 Fix it (Open)");
+  });
+
   it("opens the link from inside the editor without revealing the source text", async () => {
     SettingsData.inlineIssueRawLink = true;
     const open = jest.spyOn(window, "open").mockReturnValue(null);

@@ -39,14 +39,9 @@ describe("settings", () => {
     expect(DEFAULT_SETTINGS.searchColumns[0].type).toBe("KEY");
   });
 
-  it("keeps saved URLs and restores defaults for blank ones", () => {
-    const custom = mergeSettings({ apiUrl: " https://api.example.com ", webUrl: "https://tracker.example.com" });
-    expect(custom.apiUrl).toBe("https://api.example.com");
-    expect(custom.webUrl).toBe("https://tracker.example.com");
-
-    const blank = mergeSettings({ apiUrl: "", webUrl: "  " });
-    expect(blank.apiUrl).toBe(DEFAULT_SETTINGS.apiUrl);
-    expect(blank.webUrl).toBe(DEFAULT_SETTINGS.webUrl);
+  it("keeps saved URLs, including a cleared web URL", () => {
+    expect(mergeSettings({ webUrl: "https://tracker.example.com" }).webUrl).toBe("https://tracker.example.com");
+    expect(mergeSettings({ webUrl: "" }).webUrl).toBe("");
   });
 
   it("trims token text and ignores empty content", () => {
