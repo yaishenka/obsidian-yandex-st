@@ -1,12 +1,12 @@
 import { App, Platform, Plugin, PluginSettingTab, Setting, type SettingDefinitionItem } from "obsidian";
-import { SEARCH_COLUMN_LABELS, STLanguage, STOrgIdHeader, STPluginSettings } from "./interfaces/settingsInterfaces";
+import { INLINE_ISSUE_TEMPLATE_PLACEHOLDERS, SEARCH_COLUMN_LABELS, STLanguage, STOrgIdHeader, STPluginSettings } from "./interfaces/settingsInterfaces";
 import { parseColumns } from "./searchView";
 
 type STSettingKey = keyof STPluginSettings;
 
 export const DEFAULT_SETTINGS: STPluginSettings = {
-  apiUrl: "",
-  webUrl: "",
+  apiUrl: "https://api.tracker.yandex.net",
+  webUrl: "https://tracker.yandex.ru",
   token: "",
   tokenPath: "~/.tracker_token",
   orgId: "",
@@ -16,6 +16,8 @@ export const DEFAULT_SETTINGS: STPluginSettings = {
   searchResultsLimit: 10,
   inlinePrefix: "ST:",
   inlineIssueUrlToTag: true,
+  inlineIssueRawLink: false,
+  inlineIssueRawLinkTemplate: "{{ key }} {{ summary }} ({{ status }})",
   searchColumns: [
     { type: "KEY", compact: false },
     { type: "SUMMARY", compact: false },
@@ -168,6 +170,16 @@ export class STSettingTab extends PluginSettingTab {
             control: { type: "toggle", key: "inlineIssueUrlToTag" }
           },
           {
+            name: "Raw inline issue link",
+            desc: "Render inline issues as a regular link instead of a bordered chip.",
+            control: { type: "toggle", key: "inlineIssueRawLink" }
+          },
+          {
+            name: "Raw link template",
+            desc: `Used when raw inline issue link is enabled. Placeholders: ${INLINE_ISSUE_TEMPLATE_PLACEHOLDERS}.`,
+            control: { type: "text", key: "inlineIssueRawLinkTemplate" }
+          },
+          {
             name: "Default search columns",
             desc: `Comma-separated columns. Available: ${availableColumns}.`,
             render: (setting) => this.configureSearchColumnsSetting(setting, availableColumns)
@@ -197,6 +209,9 @@ export class STSettingTab extends PluginSettingTab {
       case "inlinePrefix":
         SettingsData.inlinePrefix = String(value ?? "");
         break;
+      case "inlineIssueRawLinkTemplate":
+        SettingsData.inlineIssueRawLinkTemplate = String(value ?? "");
+        break;
       case "orgIdHeader":
         SettingsData.orgIdHeader = value === "X-Cloud-Org-ID" ? "X-Cloud-Org-ID" : "X-Org-ID";
         break;
@@ -209,6 +224,7 @@ export class STSettingTab extends PluginSettingTab {
         break;
       }
       case "inlineIssueUrlToTag":
+      case "inlineIssueRawLink":
       case "logRequestsResponses":
         SettingsData[key] = Boolean(value);
         break;
@@ -284,6 +300,27 @@ export class STSettingTab extends PluginSettingTab {
           await saveSettings(this.plugin);
           this.onChange();
         }));
+    new Setting(containerEl)
+      .setName("Raw inline issue link")
+      .setDesc("Render inline issues as a regular link instead of a bordered chip.")
+      .addToggle((toggle) => toggle
+        .setValue(SettingsData.inlineIssueRawLink)
+        .onChange(async (value) => {
+          SettingsData.inlineIssueRawLink = value;
+          await saveSettings(this.plugin);
+          this.onChange();
+          this.display();
+        }));
+    if (SettingsData.inlineIssueRawLink) {
+      this.text(
+        "Raw link template",
+        `Placeholders: ${INLINE_ISSUE_TEMPLATE_PLACEHOLDERS}.`,
+        SettingsData.inlineIssueRawLinkTemplate,
+        (value) => {
+          SettingsData.inlineIssueRawLinkTemplate = value;
+        }
+      );
+    }
     const availableColumns = Object.entries(SEARCH_COLUMN_LABELS).map(([type, label]) => `${type} (${label})`).join(", ");
     this.searchColumns(availableColumns);
   }

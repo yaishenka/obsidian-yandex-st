@@ -1,22 +1,31 @@
 import { Issue } from "../interfaces/trackerInterfaces";
-import { SettingsData } from "../settings";
+import { DEFAULT_SETTINGS, SettingsData } from "../settings";
+import { formatIssueTemplate } from "./issueFields";
 
 function issueUrl(issueKey: string): string | undefined {
   const configuredUrl = SettingsData.webUrl.trim();
   if (configuredUrl === "") {
     return undefined;
   }
-  const base = configuredUrl.endsWith("/") ? configuredUrl.slice(0, -1) : configuredUrl;
-  return `${base}/${issueKey}`;
+  return `${configuredUrl.replace(/\/$/, "")}/${issueKey}`;
 }
 
 function renderIssueKey(parent: HTMLElement, issueKey: string, className = "st-tag st-key"): void {
   const href = issueUrl(issueKey);
   if (href) {
-    createEl("a", { cls: className, href, text: issueKey, parent });
+    parent.appendChild(createExternalLink(issueKey, href, className));
   } else {
     createSpan({ cls: className, text: issueKey, parent });
   }
+}
+
+function createExternalLink(text: string, href: string, className: string): HTMLAnchorElement {
+  const link = createEl("a", { cls: className, text });
+  link.setAttribute("href", href);
+  link.setAttribute("target", "_blank");
+  link.setAttribute("rel", "noopener noreferrer");
+  link.href = href;
+  return link;
 }
 
 function statusClass(issue: Issue): string {
@@ -25,6 +34,23 @@ function statusClass(issue: Issue): string {
   if (/progress|review|testing|в работе|ревью|тест/.test(status)) return "st-status-progress";
   if (/block|reject|blocked|отклон|блок/.test(status)) return "st-status-danger";
   return "st-status-muted";
+}
+
+function rawIssueLinkText(issue: Issue): string {
+  const template = SettingsData.inlineIssueRawLinkTemplate.trim() || DEFAULT_SETTINGS.inlineIssueRawLinkTemplate;
+  return formatIssueTemplate(template, issue);
+}
+
+function renderRawIssueLink(issue: Issue): HTMLElement {
+  return renderRawIssueText(rawIssueLinkText(issue), "st-inline-issue-raw", issue.key);
+}
+
+function renderRawIssueText(text: string, className = "st-inline-issue-raw", issueKey?: string): HTMLElement {
+  const href = issueUrl(issueKey ?? text);
+  if (href) {
+    return createExternalLink(text, href, `${className} external-link`);
+  }
+  return createSpan({ cls: className, text });
 }
 
 export default {
@@ -55,6 +81,20 @@ export default {
       createSpan({ cls: "st-tag st-muted", text: issue.assignee.display, parent: row });
     }
     return row;
+  },
+
+  renderInlineIssue(issue: Issue, compact = false): HTMLElement {
+    return SettingsData.inlineIssueRawLink ? renderRawIssueLink(issue) : this.renderIssue(issue, compact);
+  },
+
+  renderInlineLoadingItem(label: string): HTMLElement {
+    return SettingsData.inlineIssueRawLink ? renderRawIssueText(label) : this.renderLoadingItem(label, true);
+  },
+
+  renderInlineIssueError(issueKey: string, message: unknown): HTMLElement {
+    return SettingsData.inlineIssueRawLink
+      ? renderRawIssueText(`${issueKey}: ${String((message as Error)?.message ?? message)}`, "st-inline-issue-raw st-danger", issueKey)
+      : this.renderIssueError(issueKey, message);
   },
 
   renderIssueError(issueKey: string, message: unknown): HTMLElement {

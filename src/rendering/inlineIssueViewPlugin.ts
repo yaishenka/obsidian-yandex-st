@@ -8,32 +8,67 @@ import { createInlineIssueTagRegex, createInlineIssueUrlRegex } from "../parsing
 import { SettingsData } from "../settings";
 import RC from "./renderingCommon";
 
-class InlineIssueWidget extends WidgetType {
-  private readonly container = createSpan({ cls: "st-inline-issue" });
+const POINTER_EVENT_TYPES = ["mousedown", "mouseup", "click", "auxclick", "dblclick"];
+
+export class InlineIssueWidget extends WidgetType {
+  private readonly settingsSignature = getInlineIssueSettingsSignature();
 
   constructor(private readonly key: string, private readonly compact: boolean, private readonly client: Pick<TrackerClient, "getIssue">) {
     super();
-    this.render();
+  }
+
+  eq(other: InlineIssueWidget): boolean {
+    return this.key === other.key && this.compact === other.compact && this.settingsSignature === other.settingsSignature;
   }
 
   toDOM(): HTMLElement {
-    return this.container;
+    const container = createSpan({ cls: "st-inline-issue" });
+    container.addEventListener("mousedown", holdCaretOutsideLink);
+    container.addEventListener("click", openLink);
+    this.render(container);
+    return container;
   }
 
-  private render(): void {
+  ignoreEvent(event: Event): boolean {
+    return POINTER_EVENT_TYPES.includes(event.type) ? findLink(event) !== null : true;
+  }
+
+  private render(container: HTMLElement): void {
     const cacheKey = `issue:${this.key}`;
     const cached = ObjectsCache.get<Issue | Error>(cacheKey);
     if (cached) {
-      this.container.replaceChildren(cached.isError ? RC.renderIssueError(this.key, cached.data) : RC.renderIssue(cached.data as Issue, this.compact));
+      container.replaceChildren(cached.isError ? RC.renderInlineIssueError(this.key, cached.data) : RC.renderInlineIssue(cached.data as Issue, this.compact));
       return;
     }
-    this.container.replaceChildren(RC.renderLoadingItem(this.key, true));
+    container.replaceChildren(RC.renderInlineLoadingItem(this.key));
     this.client.getIssue(this.key).then((issue) => {
-      this.container.replaceChildren(RC.renderIssue(ObjectsCache.add(cacheKey, issue).data, this.compact));
+      container.replaceChildren(RC.renderInlineIssue(ObjectsCache.add(cacheKey, issue).data, this.compact));
     }).catch((error) => {
-      this.container.replaceChildren(RC.renderIssueError(this.key, ObjectsCache.add(cacheKey, error, true).data));
+      container.replaceChildren(RC.renderInlineIssueError(this.key, ObjectsCache.add(cacheKey, error, true).data));
     });
   }
+}
+
+function findLink(event: Event): HTMLAnchorElement | null {
+  return event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
+}
+
+function holdCaretOutsideLink(event: MouseEvent): void {
+  // Without this the editor moves the caret into the widget range, which reveals
+  // the source text and detaches the link before its click event fires.
+  if (findLink(event)) {
+    event.preventDefault();
+  }
+}
+
+function openLink(event: MouseEvent): void {
+  const link = findLink(event);
+  if (!link) {
+    return;
+  }
+  event.preventDefault();
+  event.stopPropagation();
+  window.open(link.href, "_blank");
 }
 
 export function createInlineIssueViewPlugin(client: Pick<TrackerClient, "getIssue">): ViewPlugin<PluginValue> {
@@ -99,7 +134,13 @@ function createInlineIssueMatchers(client: Pick<TrackerClient, "getIssue">): Inl
 }
 
 function getInlineIssueSettingsSignature(): string {
-  return JSON.stringify([SettingsData.inlinePrefix, SettingsData.inlineIssueUrlToTag, SettingsData.webUrl]);
+  return JSON.stringify([
+    SettingsData.inlinePrefix,
+    SettingsData.inlineIssueUrlToTag,
+    SettingsData.webUrl,
+    SettingsData.inlineIssueRawLink,
+    SettingsData.inlineIssueRawLinkTemplate
+  ]);
 }
 
 function issueDecoration(key: string, compact: boolean, view: EditorView, start: number, length: number, client: Pick<TrackerClient, "getIssue">): Decoration {

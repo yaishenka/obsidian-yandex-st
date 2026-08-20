@@ -28,6 +28,8 @@ export interface STPluginSettings {
   searchResultsLimit: number;
   inlinePrefix: string;
   inlineIssueUrlToTag: boolean;
+  inlineIssueRawLink: boolean;
+  inlineIssueRawLinkTemplate: string;
   searchColumns: SearchColumn[];
   logRequestsResponses: boolean;
 }
@@ -41,3 +43,7 @@ export const SEARCH_COLUMN_LABELS: Record<SearchColumnType, string> = {
   PRIORITY: "Priority",
   TYPE: "Type"
 };
+
+export const INLINE_ISSUE_TEMPLATE_PLACEHOLDERS = (Object.keys(SEARCH_COLUMN_LABELS) as SearchColumnType[])
+  .map((type) => `{{ ${type.toLowerCase()} }}`)
+  .join(", ");

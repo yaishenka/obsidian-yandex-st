@@ -41,6 +41,24 @@ describe("inline issue renderer", () => {
     expect(el.textContent).toContain("One");
   });
 
+  it("renders a templated raw link for inline issues", async () => {
+    SettingsData.webUrl = "https://tracker.yandex.ru";
+    SettingsData.inlineIssueRawLink = true;
+    SettingsData.inlineIssueRawLinkTemplate = "{{ key }} {{ summary }} ({{ status }})";
+    const client = { getIssue: jest.fn().mockResolvedValue({ key: "YT-1", summary: "One", status: { display: "Open", id: "open" } }) };
+    const el = document.createElement("p");
+    el.textContent = "See ST:YT-1 now";
+
+    await createInlineIssueRenderer(client as any)(el, null as any);
+    await Promise.resolve();
+
+    const link = el.querySelector("a.st-inline-issue-raw");
+    expect(link?.getAttribute("href")).toBe("https://tracker.yandex.ru/YT-1");
+    expect(link?.getAttribute("target")).toBe("_blank");
+    expect(link?.textContent).toBe("YT-1 One (Open)");
+    expect(el.querySelector(".st-tag")).toBeNull();
+  });
+
   it("replaces Tracker issue URLs in reading mode when enabled", async () => {
     SettingsData.webUrl = "https://tracker.yandex.ru";
     const client = { getIssue: jest.fn().mockResolvedValue({ key: "YT-123", summary: "From URL", status: { display: "Open", id: "open" } }) };

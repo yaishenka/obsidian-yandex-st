@@ -46,6 +46,7 @@ export default class STPlugin extends Plugin {
       name: "Clear ST cache",
       callback: () => {
         ObjectsCache.clear();
+        this.refreshInlineIssueViews();
         new Notice("ST: cache cleared");
       }
     });
