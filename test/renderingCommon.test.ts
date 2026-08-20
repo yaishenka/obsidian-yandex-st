@@ -47,6 +47,34 @@ describe("renderingCommon", () => {
     expect(el.querySelector("a")?.getAttribute("href")).toBe("https://tracker.yandex.ru/YT-1");
   });
 
+  it("renders a raw inline issue as a regular link from the template", () => {
+    SettingsData.webUrl = "https://tracker.yandex.ru";
+    SettingsData.inlineIssueRawLink = true;
+    SettingsData.inlineIssueRawLinkTemplate = "{{ key }} {{ summary }} ({{ status }})";
+    const el = RC.renderInlineIssue({
+      key: "YT-1",
+      summary: "Fix it",
+      status: { id: "open", display: "Open" }
+    });
+    expect(el.tagName).toBe("A");
+    expect(el.className).toBe("st-inline-issue-raw");
+    expect(el.getAttribute("href")).toBe("https://tracker.yandex.ru/YT-1");
+    expect(el.getAttribute("target")).toBe("_blank");
+    expect(el.textContent).toBe("YT-1 Fix it (Open)");
+    expect(el.querySelector(".st-tag")).toBeNull();
+  });
+
+  it("keeps chip rendering for fence issues when raw inline links are enabled", () => {
+    SettingsData.inlineIssueRawLink = true;
+    const el = RC.renderIssue({
+      key: "YT-1",
+      summary: "Fix it",
+      status: { id: "open", display: "Open" }
+    });
+    expect(el.className).toContain("st-issue-chip");
+    expect(el.textContent).toContain("Fix it");
+  });
+
   it("renders compact issue without summary", () => {
     const el = RC.renderIssue({ key: "YT-1", summary: "Fix it", status: { id: "open", display: "Open" } }, true);
     expect(el.textContent).toContain("YT-1");

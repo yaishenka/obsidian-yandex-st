@@ -8,6 +8,8 @@ describe("settings", () => {
     expect(DEFAULT_SETTINGS.orgId).toBe("");
     expect(DEFAULT_SETTINGS.orgIdHeader).toBe("X-Org-ID");
     expect(DEFAULT_SETTINGS.inlinePrefix).toBe("ST:");
+    expect(DEFAULT_SETTINGS.inlineIssueRawLink).toBe(false);
+    expect(DEFAULT_SETTINGS.inlineIssueRawLinkTemplate).toBe("{{ key }} {{ summary }} ({{ status }})");
     expect(DEFAULT_SETTINGS.language).toBe("ru");
   });
 

@@ -24,6 +24,8 @@ Configure these values in plugin settings before rendering issues:
 - Organization ID: sent as `X-Org-ID` or `X-Cloud-Org-ID` on every Tracker API request
 - Organization header: `X-Org-ID` for Yandex 360 (default), `X-Cloud-Org-ID` for Yandex Cloud
 - Language: `ru` by default; supported values: `ru`, `en`
+- Raw inline issue link: render `ST:YT-123` as a regular link instead of a bordered chip
+- Raw link template: placeholders `{{ key }}`, `{{ summary }}`, `{{ status }}`, `{{ assignee }}`, `{{ updated }}`, `{{ priority }}`, `{{ type }}`
 
 Paste an OAuth token into settings, or leave it empty and keep the token in the configured token file. Follow the public API access docs for OAuth, IAM token, and organization requirements. Find the organization ID in Tracker: Administration → Organizations.
 

@@ -33,7 +33,7 @@ function replaceTextNode(node: Text, client: Pick<TrackerClient, "getIssue">): v
   matches.forEach((match) => {
     fragment.appendText(text.slice(cursor, match.index));
     const container = createSpan({ cls: "st-inline-issue" });
-    container.appendChild(RC.renderLoadingItem(match.key, true));
+    container.appendChild(RC.renderInlineLoadingItem(match.key));
     fragment.append(container);
     fillIssue(container, match.key, match.compact, client);
     cursor = match.index + match.raw.length;
@@ -98,12 +98,12 @@ function fillIssue(container: HTMLElement, key: string, compact: boolean, client
   const cacheKey = `issue:${key}`;
   const cached = ObjectsCache.get<Issue | Error>(cacheKey);
   if (cached) {
-    container.replaceChildren(cached.isError ? RC.renderIssueError(key, cached.data) : RC.renderIssue(cached.data as Issue, compact));
+    container.replaceChildren(cached.isError ? RC.renderInlineIssueError(key, cached.data) : RC.renderInlineIssue(cached.data as Issue, compact));
     return;
   }
   client.getIssue(key).then((issue) => {
-    container.replaceChildren(RC.renderIssue(ObjectsCache.add(cacheKey, issue).data, compact));
+    container.replaceChildren(RC.renderInlineIssue(ObjectsCache.add(cacheKey, issue).data, compact));
   }).catch((error) => {
-    container.replaceChildren(RC.renderIssueError(key, ObjectsCache.add(cacheKey, error, true).data));
+    container.replaceChildren(RC.renderInlineIssueError(key, ObjectsCache.add(cacheKey, error, true).data));
   });
 }

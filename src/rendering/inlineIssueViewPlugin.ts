@@ -20,18 +20,22 @@ class InlineIssueWidget extends WidgetType {
     return this.container;
   }
 
+  ignoreEvent(event: Event): boolean {
+    return event.type !== "click" && event.type !== "mousedown" && event.type !== "mouseup" && event.type !== "auxclick";
+  }
+
   private render(): void {
     const cacheKey = `issue:${this.key}`;
     const cached = ObjectsCache.get<Issue | Error>(cacheKey);
     if (cached) {
-      this.container.replaceChildren(cached.isError ? RC.renderIssueError(this.key, cached.data) : RC.renderIssue(cached.data as Issue, this.compact));
+      this.container.replaceChildren(cached.isError ? RC.renderInlineIssueError(this.key, cached.data) : RC.renderInlineIssue(cached.data as Issue, this.compact));
       return;
     }
-    this.container.replaceChildren(RC.renderLoadingItem(this.key, true));
+    this.container.replaceChildren(RC.renderInlineLoadingItem(this.key));
     this.client.getIssue(this.key).then((issue) => {
-      this.container.replaceChildren(RC.renderIssue(ObjectsCache.add(cacheKey, issue).data, this.compact));
+      this.container.replaceChildren(RC.renderInlineIssue(ObjectsCache.add(cacheKey, issue).data, this.compact));
     }).catch((error) => {
-      this.container.replaceChildren(RC.renderIssueError(this.key, ObjectsCache.add(cacheKey, error, true).data));
+      this.container.replaceChildren(RC.renderInlineIssueError(this.key, ObjectsCache.add(cacheKey, error, true).data));
     });
   }
 }
@@ -99,7 +103,13 @@ function createInlineIssueMatchers(client: Pick<TrackerClient, "getIssue">): Inl
 }
 
 function getInlineIssueSettingsSignature(): string {
-  return JSON.stringify([SettingsData.inlinePrefix, SettingsData.inlineIssueUrlToTag, SettingsData.webUrl]);
+  return JSON.stringify([
+    SettingsData.inlinePrefix,
+    SettingsData.inlineIssueUrlToTag,
+    SettingsData.webUrl,
+    SettingsData.inlineIssueRawLink,
+    SettingsData.inlineIssueRawLinkTemplate
+  ]);
 }
 
 function issueDecoration(key: string, compact: boolean, view: EditorView, start: number, length: number, client: Pick<TrackerClient, "getIssue">): Decoration {
