@@ -1,5 +1,7 @@
 export type STLanguage = "ru" | "en";
 
+export type STOrgIdHeader = "X-Org-ID" | "X-Cloud-Org-ID";
+
 export type SearchColumnType =
   | "KEY"
   | "SUMMARY"
@@ -19,6 +21,8 @@ export interface STPluginSettings {
   webUrl: string;
   token: string;
   tokenPath: string;
+  orgId: string;
+  orgIdHeader: STOrgIdHeader;
   language: STLanguage;
   cacheTime: string;
   searchResultsLimit: number;

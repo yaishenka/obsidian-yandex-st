@@ -5,6 +5,8 @@ describe("settings", () => {
     expect(DEFAULT_SETTINGS.apiUrl).toBe("");
     expect(DEFAULT_SETTINGS.webUrl).toBe("");
     expect(DEFAULT_SETTINGS.tokenPath).toBe("~/.tracker_token");
+    expect(DEFAULT_SETTINGS.orgId).toBe("");
+    expect(DEFAULT_SETTINGS.orgIdHeader).toBe("X-Org-ID");
     expect(DEFAULT_SETTINGS.inlinePrefix).toBe("ST:");
     expect(DEFAULT_SETTINGS.language).toBe("ru");
   });
@@ -14,7 +16,15 @@ describe("settings", () => {
     expect(merged.searchResultsLimit).toBe(25);
     expect(merged.token).toBe("abc");
     expect(merged.apiUrl).toBe(DEFAULT_SETTINGS.apiUrl);
+    expect(merged.orgId).toBe("");
+    expect(merged.orgIdHeader).toBe("X-Org-ID");
     expect(merged.searchColumns.map((column) => column.type)).toEqual(["KEY", "SUMMARY", "STATUS", "ASSIGNEE", "UPDATED"]);
+  });
+
+  it("keeps a saved organization ID and header", () => {
+    const merged = mergeSettings({ orgId: "123456", orgIdHeader: "X-Cloud-Org-ID" });
+    expect(merged.orgId).toBe("123456");
+    expect(merged.orgIdHeader).toBe("X-Cloud-Org-ID");
   });
 
   it("clones default search columns for every settings merge", () => {

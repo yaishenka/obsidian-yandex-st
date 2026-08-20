@@ -17,7 +17,8 @@ describe("TrackerClient", () => {
     const client = new TrackerClient(() => ({
       apiUrl: "https://api.tracker.yandex.net",
       token: "secret",
-      language: "ru"
+      language: "ru",
+      orgId: "  "
     }));
 
     await client.getIssue("YT-1");
@@ -31,6 +32,49 @@ describe("TrackerClient", () => {
         "Accept-Language": "ru"
       })
     }));
+    expect(mockedRequestUrl.mock.calls[0][0].headers["X-Org-ID"]).toBeUndefined();
+    expect(mockedRequestUrl.mock.calls[0][0].headers["X-Cloud-Org-ID"]).toBeUndefined();
+  });
+
+  it("sends X-Org-ID when organization ID is configured", async () => {
+    mockedRequestUrl.mockResolvedValue({ status: 200, json: { key: "YT-1" }, headers: {} });
+    const client = new TrackerClient(() => ({
+      apiUrl: "https://api.tracker.yandex.net",
+      token: "secret",
+      language: "ru",
+      orgId: " 123456 ",
+      orgIdHeader: "X-Org-ID"
+    }));
+
+    await client.getIssue("YT-1");
+
+    expect(mockedRequestUrl).toHaveBeenCalledWith(expect.objectContaining({
+      headers: expect.objectContaining({
+        Authorization: "OAuth secret",
+        "X-Org-ID": "123456"
+      })
+    }));
+    expect(mockedRequestUrl.mock.calls[0][0].headers["X-Cloud-Org-ID"]).toBeUndefined();
+  });
+
+  it("sends X-Cloud-Org-ID when that organization header is selected", async () => {
+    mockedRequestUrl.mockResolvedValue({ status: 200, json: { key: "YT-1" }, headers: {} });
+    const client = new TrackerClient(() => ({
+      apiUrl: "https://api.tracker.yandex.net",
+      token: "secret",
+      language: "en",
+      orgId: "bpf123",
+      orgIdHeader: "X-Cloud-Org-ID"
+    }));
+
+    await client.getIssue("YT-1");
+
+    expect(mockedRequestUrl).toHaveBeenCalledWith(expect.objectContaining({
+      headers: expect.objectContaining({
+        "X-Cloud-Org-ID": "bpf123"
+      })
+    }));
+    expect(mockedRequestUrl.mock.calls[0][0].headers["X-Org-ID"]).toBeUndefined();
   });
 
   it("posts search query with paging", async () => {
