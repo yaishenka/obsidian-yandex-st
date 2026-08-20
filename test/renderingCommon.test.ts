@@ -34,17 +34,20 @@ describe("renderingCommon", () => {
     expect(el.textContent).toContain("YT-1");
     expect(el.textContent).toContain("Fix it");
     expect(el.textContent).toContain("Open");
-    expect(el.querySelector("a")).toBeNull();
   });
 
-  it("links issue chips when web URL is configured", () => {
-    SettingsData.webUrl = "https://tracker.yandex.ru";
+  it("links issues to the default Tracker web URL", () => {
+    expect(RC.issueUrl("YT-1")).toBe("https://tracker.yandex.ru/YT-1");
+  });
+
+  it("links issue chips to a custom web URL", () => {
+    SettingsData.webUrl = "https://tracker.example.com";
     const el = RC.renderIssue({
       key: "YT-1",
       summary: "Fix it",
       status: { id: "open", display: "Open" }
     });
-    expect(el.querySelector("a")?.getAttribute("href")).toBe("https://tracker.yandex.ru/YT-1");
+    expect(el.querySelector("a")?.getAttribute("href")).toBe("https://tracker.example.com/YT-1");
   });
 
   it("renders a raw inline issue as a regular link from the template", () => {
@@ -57,7 +60,7 @@ describe("renderingCommon", () => {
       status: { id: "open", display: "Open" }
     });
     expect(el.tagName).toBe("A");
-    expect(el.className).toBe("st-inline-issue-raw");
+    expect(el.className).toBe("st-inline-issue-raw external-link");
     expect(el.getAttribute("href")).toBe("https://tracker.yandex.ru/YT-1");
     expect(el.getAttribute("target")).toBe("_blank");
     expect(el.textContent).toBe("YT-1 Fix it (Open)");

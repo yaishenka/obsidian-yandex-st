@@ -5,8 +5,8 @@ import { parseColumns } from "./searchView";
 type STSettingKey = keyof STPluginSettings;
 
 export const DEFAULT_SETTINGS: STPluginSettings = {
-  apiUrl: "",
-  webUrl: "",
+  apiUrl: "https://api.tracker.yandex.net",
+  webUrl: "https://tracker.yandex.ru",
   token: "",
   tokenPath: "~/.tracker_token",
   orgId: "",

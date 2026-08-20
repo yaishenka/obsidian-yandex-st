@@ -1,9 +1,9 @@
 import { DEFAULT_SETTINGS, mergeSettings, resolveTokenFromText } from "../src/settings";
 
 describe("settings", () => {
-  it("uses public plugin defaults without organization-specific URLs", () => {
-    expect(DEFAULT_SETTINGS.apiUrl).toBe("");
-    expect(DEFAULT_SETTINGS.webUrl).toBe("");
+  it("uses the public Tracker endpoints as defaults", () => {
+    expect(DEFAULT_SETTINGS.apiUrl).toBe("https://api.tracker.yandex.net");
+    expect(DEFAULT_SETTINGS.webUrl).toBe("https://tracker.yandex.ru");
     expect(DEFAULT_SETTINGS.tokenPath).toBe("~/.tracker_token");
     expect(DEFAULT_SETTINGS.orgId).toBe("");
     expect(DEFAULT_SETTINGS.orgIdHeader).toBe("X-Org-ID");
@@ -37,6 +37,16 @@ describe("settings", () => {
 
     expect(second.searchColumns[0].type).toBe("KEY");
     expect(DEFAULT_SETTINGS.searchColumns[0].type).toBe("KEY");
+  });
+
+  it("keeps saved URLs and restores defaults for blank ones", () => {
+    const custom = mergeSettings({ apiUrl: " https://api.example.com ", webUrl: "https://tracker.example.com" });
+    expect(custom.apiUrl).toBe("https://api.example.com");
+    expect(custom.webUrl).toBe("https://tracker.example.com");
+
+    const blank = mergeSettings({ apiUrl: "", webUrl: "  " });
+    expect(blank.apiUrl).toBe(DEFAULT_SETTINGS.apiUrl);
+    expect(blank.webUrl).toBe(DEFAULT_SETTINGS.webUrl);
   });
 
   it("trims token text and ignores empty content", () => {
