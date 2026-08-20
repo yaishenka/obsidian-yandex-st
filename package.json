@@ -1,6 +1,6 @@
 {
   "name": "yandex-tracker-st",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Unofficial plugin for rendering Yandex Tracker issues and queries in notes. Not affiliated with or supported by Yandex.",
   "main": "main.js",
   "files": [
