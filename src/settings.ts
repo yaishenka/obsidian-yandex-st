@@ -1,5 +1,5 @@
 import { App, Platform, Plugin, PluginSettingTab, Setting, type SettingDefinitionItem } from "obsidian";
-import { SEARCH_COLUMN_LABELS, STLanguage, STPluginSettings } from "./interfaces/settingsInterfaces";
+import { SEARCH_COLUMN_LABELS, STLanguage, STOrgIdHeader, STPluginSettings } from "./interfaces/settingsInterfaces";
 import { parseColumns } from "./searchView";
 
 type STSettingKey = keyof STPluginSettings;
@@ -9,6 +9,8 @@ export const DEFAULT_SETTINGS: STPluginSettings = {
   webUrl: "",
   token: "",
   tokenPath: "~/.tracker_token",
+  orgId: "",
+  orgIdHeader: "X-Org-ID",
   language: "ru",
   cacheTime: "15m",
   searchResultsLimit: 10,
@@ -118,6 +120,20 @@ export class STSettingTab extends PluginSettingTab {
             control: { type: "text", key: "tokenPath" }
           },
           {
+            name: "Organization ID",
+            desc: "Sent on every Tracker API request. Find it in Tracker: Administration → Organizations.",
+            control: { type: "text", key: "orgId" }
+          },
+          {
+            name: "Organization header",
+            desc: "X-Org-ID for Yandex 360, X-Cloud-Org-ID for Yandex Cloud.",
+            control: {
+              type: "dropdown",
+              key: "orgIdHeader",
+              options: { "X-Org-ID": "X-Org-ID", "X-Cloud-Org-ID": "X-Cloud-Org-ID" }
+            }
+          },
+          {
             name: "Language",
             desc: "Localized Tracker fields.",
             control: {
@@ -174,11 +190,15 @@ export class STSettingTab extends PluginSettingTab {
       case "webUrl":
       case "token":
       case "tokenPath":
+      case "orgId":
       case "cacheTime":
         SettingsData[key] = String(value ?? "").trim();
         break;
       case "inlinePrefix":
         SettingsData.inlinePrefix = String(value ?? "");
+        break;
+      case "orgIdHeader":
+        SettingsData.orgIdHeader = value === "X-Cloud-Org-ID" ? "X-Cloud-Org-ID" : "X-Org-ID";
         break;
       case "language":
         SettingsData.language = value === "en" ? "en" : "ru";
@@ -217,6 +237,20 @@ export class STSettingTab extends PluginSettingTab {
     this.text("Token file", "Used when OAuth token is empty. Desktop only.", SettingsData.tokenPath, (value) => {
       SettingsData.tokenPath = value.trim();
     });
+    this.text("Organization ID", "Sent on every Tracker API request. Find it in Tracker: Administration → Organizations.", SettingsData.orgId, (value) => {
+      SettingsData.orgId = value.trim();
+    });
+    new Setting(containerEl)
+      .setName("Organization header")
+      .setDesc("X-Org-ID for Yandex 360, X-Cloud-Org-ID for Yandex Cloud.")
+      .addDropdown((dropdown) => dropdown
+        .addOptions({ "X-Org-ID": "X-Org-ID", "X-Cloud-Org-ID": "X-Cloud-Org-ID" })
+        .setValue(SettingsData.orgIdHeader)
+        .onChange(async (value: STOrgIdHeader) => {
+          SettingsData.orgIdHeader = value === "X-Cloud-Org-ID" ? "X-Cloud-Org-ID" : "X-Org-ID";
+          await saveSettings(this.plugin);
+          this.onChange();
+        }));
 
     new Setting(containerEl)
       .setName("Language")

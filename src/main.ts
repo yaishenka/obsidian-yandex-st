@@ -19,7 +19,13 @@ export default class STPlugin extends Plugin {
 
     this.client = new TrackerClient(async () => {
       const token = await resolveToken(SettingsData);
-      return token ? { apiUrl: SettingsData.apiUrl, token, language: SettingsData.language } : undefined;
+      return token ? {
+        apiUrl: SettingsData.apiUrl,
+        token,
+        language: SettingsData.language,
+        orgId: SettingsData.orgId,
+        orgIdHeader: SettingsData.orgIdHeader
+      } : undefined;
     });
 
     this.addSettingTab(new STSettingTab(this.app, this, () => {

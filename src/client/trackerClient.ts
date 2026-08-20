@@ -1,10 +1,13 @@
 import { requestUrl, RequestUrlParam, RequestUrlResponse } from "obsidian";
+import { STOrgIdHeader } from "../interfaces/settingsInterfaces";
 import { Issue, Myself, TrackerSearchResult } from "../interfaces/trackerInterfaces";
 
 export interface TrackerClientOptions {
   apiUrl: string;
   token: string;
   language: "ru" | "en";
+  orgId?: string;
+  orgIdHeader?: STOrgIdHeader;
 }
 
 export class TrackerApiError extends Error {
@@ -75,6 +78,7 @@ export class TrackerClient {
         Authorization: `OAuth ${clientOptions.token}`,
         "Accept-Language": clientOptions.language,
         Accept: "application/json",
+        ...orgIdHeaders(clientOptions),
         ...(options.body !== undefined ? { "Content-Type": "application/json" } : {})
       },
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
@@ -93,6 +97,15 @@ export class TrackerClient {
     }
     return response;
   }
+}
+
+function orgIdHeaders(options: TrackerClientOptions): Record<string, string> {
+  const orgId = options.orgId?.trim() ?? "";
+  if (orgId === "") {
+    return {};
+  }
+  const header = options.orgIdHeader === "X-Cloud-Org-ID" ? "X-Cloud-Org-ID" : "X-Org-ID";
+  return { [header]: orgId };
 }
 
 function normalizeBaseUrl(apiUrl: string): string {

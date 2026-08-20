@@ -21,9 +21,11 @@ Configure these values in plugin settings before rendering issues:
 - API URL: your Tracker API base URL
 - Web URL: your Tracker web URL
 - Token file fallback: `~/.tracker_token`
+- Organization ID: sent as `X-Org-ID` or `X-Cloud-Org-ID` on every Tracker API request
+- Organization header: `X-Org-ID` for Yandex 360 (default), `X-Cloud-Org-ID` for Yandex Cloud
 - Language: `ru` by default; supported values: `ru`, `en`
 
-Paste an OAuth token into settings, or leave it empty and keep the token in the configured token file. Follow the public API access docs for OAuth, IAM token, and organization requirements.
+Paste an OAuth token into settings, or leave it empty and keep the token in the configured token file. Follow the public API access docs for OAuth, IAM token, and organization requirements. Find the organization ID in Tracker: Administration → Organizations.
 
 ## Supported MVP Syntax
 
